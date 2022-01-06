@@ -1,0 +1,90 @@
+import numpy as np
+import matplotlib.image as img
+import random
+from PIL import Image
+
+
+##So this is a code for shrinking pictures using Kmean algorithm 
+## This program needs 3 inputs. 
+## 1) your image in any format (.png;.jpg;...)
+## 2)Number of clusters. Notice that much more cluster you have the size change will be lower ;)
+## 3) name of the file you want to save example.   "newpicture.jpg"
+
+
+## Remeber that this code is to show how actually clustering work because of that it have big O() depends on number of clusters and size of picture in pixels
+
+
+class ImageTranform:
+    def __init__(self,image,numberofklusters, filenametosave):
+    
+        self.image = img.imread(image)
+        self.K = numberofklusters
+        self.checker = [] # we use this attribute to check change of clusters
+        self.copy = self.image  #this copy attribute is used to create ur new picture
+
+
+        #List of clusters
+        self.clusters = []
+        self.RandomClusters()
+
+
+        #Sub_list for Points
+        self.points = []
+        self.Sublists()
+
+        #List for distance
+        self.distance = []
+
+
+        #Main loop
+        while self.clusters!= self.checker:  
+            self.Run()
+            self.Update()
+            self.Sublists()
+
+            
+
+
+        # Save Image
+        
+        im = Image.fromarray(self.copy)
+        im.save(filenametosave)
+
+
+    # if you want your code to be faster you can choose clusters by yourself 
+    def RandomClusters(self):
+        for i in range(self.K):
+            self.clusters.append([random.randint(0,255),random.randint(0,255),random.randint(0,255)])
+
+    def Sublists(self): #we create this function and list to save ur cluster points
+        for i in range(self.K):
+            self.points.append([])
+
+
+    def Distance(self,a, b): #As you know we can calculate Many type of norm so there you can choose which norm will be better for you || linalg.norm(x, ord=None)
+        c = np.array(a) - np.array(b)
+        return  np.linalg.norm(c)
+
+    #Using this function we take every pixel from our picture and calculate the distance and also sort them in self.points List
+    def Run(self):
+        LR = self.image.shape
+        for i in range(LR[0]):
+            for j in range(LR[1]):
+                for k in range(len(self.clusters)):
+                    self.distance.append(self.Distance(self.image[i][j],self.clusters[k]))
+                index = self.distance.index(min(self.distance))
+                self.points[index].append(self.image[i][j])
+                self.distance=[]
+                self.copy[i][j] =self.clusters[index]
+
+    def Update(self):
+        self.checker = self.clusters
+        for i in range(self.K):
+            if len(self.points[i])!=0:
+                self.clusters[i][0] = sum( [c[0] for c in np.array(self.points[i])])/ len(self.points[i])
+                self.clusters[i][1] = sum([c[1] for c in np.array(self.points[i])]) / len(self.points[i])
+                self.clusters[i][2] = sum([c[2] for c in np.array(self.points[i])]) / len(self.points[i])
+                print(self.clusters)
+
+ImageTranform("small.jpg",256,"newpic.jpg")
+
